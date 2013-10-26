@@ -113,4 +113,4 @@ for ss in stack_samples:
     d = add_root(d)
     root = merge_dict(root, d)
 
-print "var test_json = ", root
+print "var trace_json = ", root
