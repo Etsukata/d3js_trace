@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+# Copyright (C) 2013 Eiichi Tsukata <devel@etsukata.com>
+
 import sys
 import re
 
@@ -24,11 +26,11 @@ def stack_sample_to_dict(sample):
                        })]
     return ret
 
-def add_root(d):
+def add_root(child):
 
     ret = {
         'name' : 'All',
-        'children' : [d]
+        'children' : [child]
     }
     return ret
 
@@ -43,9 +45,9 @@ def merge_dict(d1, d2):
     if not d1['name'] == d2['name']:
         print 'error on merge_dict(): root is not same.'
         print 'd1:'
-        pprint(d1)
+        print(d1)
         print 'd2:'
-        pprint(d2)
+        print(d2)
         sys.exit(1)
 
     if not d1.has_key('children'):
@@ -73,10 +75,10 @@ def merge_dict(d1, d2):
 def strip_func(f):
 
     ret = f
-    ret =  re.sub('\(\[kernel.kallsyms\]\.init\.text\)', '', ret)
-    ret =  re.sub('\(\[kernel.kallsyms\]\)', '', ret)
-    ret =  re.sub('\(\[unknown\]\)', '', ret)
-    ret =  re.sub('\(\)', '', ret)
+    ret =  re.sub(r'\(\[kernel.kallsyms\]\.init\.text\)', '', ret)
+    ret =  re.sub(r'\(\[kernel.kallsyms\]\)', '', ret)
+    ret =  re.sub(r'\(\[unknown\]\)', '', ret)
+    ret =  re.sub(r'\(\)', '', ret)
     ret =  ''.join(ret.split()[1:])
     return ret
 
@@ -95,12 +97,12 @@ for line in sys.stdin:
 for st in stack_traces:
     count = stack_traces.count(st) + 1
     st.reverse()
-    st =  map(strip_func, st)
+    st =  [strip_func(x) for x in st]
     stack_sample = {
         'stack_trace' : st,
         'count' : count
     }
-    if not st in map(lambda x: x['stack_trace'], stack_samples):
+    if not st in [x['stack_trace'] for x in stack_samples]:
         stack_samples.append(stack_sample)
 
 root = {
@@ -109,8 +111,8 @@ root = {
 }
 
 for ss in stack_samples:
-    d = stack_sample_to_dict(ss)
-    d = add_root(d)
-    root = merge_dict(root, d)
+    dict_data = stack_sample_to_dict(ss)
+    dict_data = add_root(dict_data)
+    root = merge_dict(root, dict_data)
 
 print "var trace_json = ", root
