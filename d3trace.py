@@ -5,10 +5,6 @@
 import sys
 import re
 
-stack_traces = []
-stack_trace = []
-stack_samples = []
-
 def stack_sample_to_dict(sample):
 
     ret = {}
@@ -82,37 +78,47 @@ def strip_func(f):
     ret =  ''.join(ret.split()[1:])
     return ret
 
-for line in sys.stdin:
-    if line[0] == '#':
-        continue
-    if line[0] == '\n':
-        if not stack_trace == []:
-            stack_traces.append(stack_trace)
-        stack_trace = []
-        continue
-    if line[0] == '\t':
-        stack_trace.append(line.strip())
-        continue
+def main():
 
-for st in stack_traces:
-    count = stack_traces.count(st) + 1
-    st.reverse()
-    st =  [strip_func(x) for x in st]
-    stack_sample = {
-        'stack_trace' : st,
-        'count' : count
+    stack_traces = []
+    stack_trace = []
+    stack_samples = []
+
+    for line in sys.stdin:
+        if line[0] == '#':
+            continue
+        if line[0] == '\n':
+            if not stack_trace == []:
+                stack_traces.append(stack_trace)
+            stack_trace = []
+            continue
+        if line[0] == '\t':
+            stack_trace.append(line.strip())
+            continue
+
+    for st in stack_traces:
+        count = stack_traces.count(st) + 1
+        st.reverse()
+        st =  [strip_func(x) for x in st]
+        stack_sample = {
+            'stack_trace' : st,
+            'count' : count
+        }
+        if not st in [x['stack_trace'] for x in stack_samples]:
+            stack_samples.append(stack_sample)
+
+    root = {
+        'name' : 'All',
+        'children' : []
     }
-    if not st in [x['stack_trace'] for x in stack_samples]:
-        stack_samples.append(stack_sample)
 
-root = {
-    'name' : 'All',
-    'children' : []
-}
+    for ss in stack_samples:
+        dict_data = stack_sample_to_dict(ss)
+        dict_data = add_root(dict_data)
+        root = merge_dict(root, dict_data)
 
-for ss in stack_samples:
-    dict_data = stack_sample_to_dict(ss)
-    dict_data = add_root(dict_data)
-    root = merge_dict(root, dict_data)
+    print "var trace_json = ", root
 
-print "var trace_json = ", root
+
+if __name__ == '__main__':
+    main()
