@@ -1,6 +1,12 @@
 #!/usr/bin/python
+'''
+    Translate trace data to json for visualizing it with D3js.
+    Usage:
+        # perf script | ./d3trace.py > trace_json.js
 
-# Copyright (C) 2013 Eiichi Tsukata <devel@etsukata.com>
+    Copyright (C) 2013 Eiichi Tsukata <devel@etsukata.com>
+'''
+
 
 import sys
 import re
@@ -78,13 +84,16 @@ def strip_func(f):
     ret =  ''.join(ret.split()[1:])
     return ret
 
-def main():
+def main(input_text=None):
+
+    if input_text is None:
+        input_text = sys.stdin
 
     stack_traces = []
     stack_trace = []
     stack_samples = []
 
-    for line in sys.stdin:
+    for line in input_text:
         if line[0] == '#':
             continue
         if line[0] == '\n':
@@ -117,8 +126,8 @@ def main():
         dict_data = add_root(dict_data)
         root = merge_dict(root, dict_data)
 
-    print "var trace_json = ", root
-
+    return "var trace_json = " + str(root)
 
 if __name__ == '__main__':
-    main()
+    output = main()
+    print output
